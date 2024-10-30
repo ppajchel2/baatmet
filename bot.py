@@ -27,11 +27,15 @@ class Bot:
         self.course = [
             Checkpoint(latitude=20.03, longitude=-67.31, radius=50),
             Checkpoint(latitude=18.04, longitude=-67.85, radius=50),
-            Checkpoint(latitude=13.03, longitude=-80.97, radius=50),
-            Checkpoint(latitude=08.51, longitude=-79.42, radius=50),
-            Checkpoint(latitude=2.806318, longitude=-168.943864, radius=1990.0),
-            Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1190.0),
-            Checkpoint(latitude=44.076538, longitude=-18.292936, radius=50.0),
+            Checkpoint(latitude=12.02, longitude=-81.39, radius=50),
+            Checkpoint(latitude=06.33, longitude=-78.8, radius=50),
+            Checkpoint(latitude=-14.64, longitude=-168.46, radius=50.0), #c1
+            Checkpoint(latitude=-36.95, longitude=162.56, radius=50.0),
+            Checkpoint(latitude=-36.8, longitude=112.8, radius=50.0),
+            Checkpoint(latitude=-24.24, longitude=72.67, radius=50.0), #c2
+            Checkpoint(latitude=-37.2, longitude=19.24, radius=50.0), 
+            Checkpoint(latitude=11.72, longitude=-32.1, radius=50.0), 
+            Checkpoint(latitude=45.72, longitude=-10.88, radius=50.0), 
             Checkpoint(
                 latitude=config.start.latitude,
                 longitude=config.start.longitude,
@@ -107,6 +111,7 @@ class Bot:
         # ===========================================================
 
         # Go through all checkpoints and find the next one to reach
+       # Go through all checkpoints and find the next one to reach
         for ch in self.course:
             # Compute the distance to the checkpoint
             dist = distance_on_surface(
@@ -115,10 +120,20 @@ class Bot:
                 longitude2=ch.longitude,
                 latitude2=ch.latitude,
             )
+            
+            # turn around if stuck, dont run within the first hour
+            if t > 1:
+                if speed == 0:
+                    print("reversing as we are stuck")
+                    prev_heading = heading
+                    print("old heading", prev_heading)
+                    instructions.heading = prev_heading - 180 % 360 #turn around, keep the number within 0 - 360 
+                    print("new heading", heading)
+            
             # Consider slowing down if the checkpoint is close
             jump = dt * np.linalg.norm(speed)
-            if dist < 2.0 * ch.radius + jump:
-                instructions.sail = min(ch.radius / jump, 1)
+            if dist < 2.0 * ch.radius + jump: # only slow down on the last checkpoint
+                instructions.sail = 1.0 #min(ch.radius / jump, 1)
             else:
                 instructions.sail = 1.0
             # Check if the checkpoint has been reached
